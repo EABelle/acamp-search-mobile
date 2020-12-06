@@ -14,8 +14,8 @@ const Header = (props) => {
 const styles = StyleSheet.create({
     header: {
         width: '100%',
-        height: 60,
-        paddingTop: 8,
+        height: 78,
+        paddingTop: 24,
         backgroundColor: Platform.OS === 'android' ? primary : 'white',
         alignItems: 'center',
         justifyContent: 'center',

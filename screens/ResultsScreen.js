@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import {
     View,
-    Text,
     StyleSheet,
     FlatList,
     Dimensions,
-    Image,
     ImageBackground
 } from 'react-native';
 import Card from "../components/Card";
 import BodyText from "../components/BodyText";
-import Axios from "axios";
 import TitleText from "../components/TitleText";
-import DatePicker from 'react-native-datepicker'
 import moment from "moment";
-import { Ionicons } from '@expo/vector-icons';
+import Datepicker from "../components/Datepicker";
+import {getProperties} from "../service";
+import AnimatedLoader from "react-native-animated-loader";
+import {Image} from "react-native-web";
 
 const AvailablePlaces = ({number, type}) => (
     number &&
@@ -63,15 +62,6 @@ const renderListItem = (listLength, itemData) => {
     </View>
 )};
 
-const client = Axios.create({});
-
-const getProperties = () => client.put(
-    'https://api.acamp.com/public-api/v1/properties/all',
-    {
-        "checkInDate": "2020-12-06",
-        "checkOutDate": "2020-12-07"
-    }).then(({ data }) => data.properties)
-
 const getDefaultDates = () => ({
     from: moment().format('YYYY-MM-DD'),
     to: moment().add(1, 'd').format('YYYY-MM-DD')
@@ -80,71 +70,65 @@ const getDefaultDates = () => ({
 const ResultsScreen = props => {
 
     const [properties, setProperties] = useState([]);
-    const [hasFetched, setHasFetched] = useState([]);
-    const [isLoading, setIsLoading] = useState([]);
-    const [error, setError] = useState([]);
+    const [hasFetched, setHasFetched] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(false);
     const [dateFrom, setDateFrom] = useState(getDefaultDates().from)
     const [dateTo, setDateTo] = useState(getDefaultDates().to)
+
     useEffect(() => {
-        getProperties()
-            .then(results => {
-                setProperties(results)
-            });
-    }, []);
+        fetchProperties();
+    }, [hasFetched]);
+
+    const fetchProperties = async () => {
+        if(!hasFetched && dateFrom && dateTo) {
+            setIsLoading(true);
+            try {
+                const results = await getProperties(dateFrom, dateTo);
+                setProperties(results);
+            } catch(e) {
+                setError(true);
+            }
+            setHasFetched(true);
+            setIsLoading(false);
+        }
+    }
+
+    const handleSetDateFrom = date => {
+        setDateFrom(date);
+        setDateTo(date);
+    }
 
     return (
         <View style={styles.screen}>
-            <Card style={styles.buttonContainer}>
-                <Text style={styles.placeHolder}>From</Text>
-                <DatePicker
-                    style={{width: 150}}
-                    date={dateFrom}
-                    mode="date"
-                    placeholder=""
-                    format="YYYY-MM-DD"
-                    minDate="2016-05-01"
-                    maxDate="2016-06-01"
-                    confirmBtnText="Confirm"
-                    cancelBtnText="Cancel"
-                    customStyles={{
-                        dateInput: {
-                            position: 'relative',
-                            marginLeft: 4,
-                            borderRadius: 4,
-                            justifyContent: 'flex-start',
-                            alignItems: 'center',
-                            flexDirection: 'row',
-                            padding: 8
-                        },
-                        dateTouchBody: {
-                            position: 'relative',
-                        },
-                        dateText: {
-
-                        }
-                    }}
-                    iconComponent={
-                        (<Ionicons
-                            name={'ios-calendar'}
-                            size={23}
-                            color={'#ccc'}
-                            style={{
-                                marginLeft: 4,
-                                position: 'absolute',
-                                left: 120
-                            }}
-                        />)
-                    }
-                    onDateChange={(date) => {setDateFrom(date)}}
-                />
+            <Card style={styles.searchFilterContainer}>
+                <View style={styles.dateFilterContainer}>
+                    <Datepicker date={dateFrom} setDate={handleSetDateFrom} placeholder="From" />
+                    <Datepicker date={dateTo} setDate={setDateTo} placeholder="To" />
+                </View>
             </Card>
             <View style={styles.listContainer}>
-                <FlatList
-                    keyExtractor={item => item.id}
-                    data={properties}
-                    renderItem={renderListItem.bind(this, properties.length)}
-                    contentContainerStyle={styles.list}
-                />
+                {
+                    isLoading ?
+                         <AnimatedLoader
+                            visible={true}
+                            overlayColor="rgba(255,255,255,0.75)"
+                            source={require("../assets/lottie-loader.json")}
+                            animationStyle={styles.lottie}
+                            speed={1}
+                        />
+                    : error ?
+                        <Image source={require("../assets/error-icon.png")} />
+                    : !properties.length ?
+                        <Image source={require("../assets/empty-loupe.svg")} />
+                    :
+                        <FlatList
+                            keyExtractor={item => item.id}
+                            data={properties}
+                            renderItem={renderListItem.bind(this, properties.length)}
+                            contentContainerStyle={styles.list}
+                        />
+                }
             </View>
         </View>
     )
@@ -155,12 +139,15 @@ const styles = StyleSheet.create({
         flex: 1,
         alignItems: 'center'
     },
-    buttonContainer: {
-        flexDirection: 'row',
-        justifyContent: 'flex-start',
+    searchFilterContainer: {
         marginTop: Dimensions.get('window').height > 600 ? 20 : 5,
         width: 400,
-        maxWidth: '90%'
+        maxWidth: '90%',
+    },
+    dateFilterContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-around',
+        width: '100%'
     },
     listContainer: {
         flex: 1,
@@ -182,8 +169,6 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         width: '100%'
     },
-    availablePlacesContainer: {
-    },
     availablePlacesCount: {
         borderRadius: 3,
         paddingLeft: 4,
@@ -204,13 +189,9 @@ const styles = StyleSheet.create({
         resizeMode: 'stretch',
         borderRadius: 4
     },
-    placeHolder: {
-        position: 'absolute',
-        backgroundColor: '#fff',
-        zIndex: 1,
-        left: 24,
-        top: 4,
-        fontSize: 12
+    lottie: {
+        width: 100,
+        height: 100
     }
 });
 
