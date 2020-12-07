@@ -8,14 +8,15 @@ To consider
 - Built with Expo
 - Empty state and error images are not following the standards of the company.
 - The app is not internationalized.
+- It was only tested on Android.
 
-## Dependencies
+## Requeriments
 
 You need Node.js v10.20.1 or greater https://nodejs.org/es/
 
 ## Running the app
 
-Clone the repo and just do:
+Clone the repo and just:
 
 ```
 $ npm i
