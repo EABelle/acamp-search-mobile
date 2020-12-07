@@ -4,67 +4,25 @@ import {
     StyleSheet,
     FlatList,
     Dimensions,
-    ImageBackground
 } from 'react-native';
 import Card from "../components/Card";
-import BodyText from "../components/BodyText";
-import TitleText from "../components/TitleText";
 import moment from "moment";
 import Datepicker from "../components/Datepicker";
 import {getProperties} from "../service";
 import AnimatedLoader from "react-native-animated-loader";
-import {Image} from "react-native-web";
-
-const AvailablePlaces = ({number, type}) => (
-    number &&
-    <View style={styles.availablePlacesContainer}>
-        <BodyText style={{fontWeight: 'bold'}}><BodyText style={styles.availablePlacesCount}>{number}</BodyText> {type}</BodyText>
-        <BodyText>Platser</BodyText>
-    </View>
-);
-
-const PriceBox = ({total, costPerNight, currency}) => (
-    <View style={styles.availablePlacesContainer}>
-        <BodyText style={{fontWeight: 'bold'}}>{total} {currency} totalt</BodyText>
-        <BodyText>{costPerNight} {currency} / Natt</BodyText>
-    </View>
-);
-
-const getCurrency = (currency) => {
-    if (currency === 'SEK') {
-        return 'kr';
-    } return currency;
-}
+import PropertyItem from "../components/PropertyItem";
 
 const renderListItem = (listLength, itemData) => {
+    return <PropertyItem property={itemData.item} />
+};
 
-    const {
-        title,
-        availableVehicleSpots,
-        availableTentSpots,
-        totalCost,
-        averageCostPerNight,
-        currency,
-        coverImage
-    } = itemData.item;
-
-    return (
-    <View style={styles.listItem}>
-        <ImageBackground style={styles.itemImage} source={{uri: coverImage}} />
-        <View style={styles.description}>
-            <TitleText>{title}</TitleText>
-            <View style={styles.listItemDetails}>
-                <AvailablePlaces number={availableVehicleSpots} type="Fordon"/>
-                <AvailablePlaces number={availableTentSpots} type="Tält"/>
-                <PriceBox total={totalCost} costPerNight={averageCostPerNight} currency={getCurrency(currency)} />
-            </View>
-        </View>
-    </View>
-)};
+const getDayAfter = date => {
+    return moment(date).add(1, 'd').format('YYYY-MM-DD');
+};
 
 const getDefaultDates = () => ({
     from: moment().format('YYYY-MM-DD'),
-    to: moment().add(1, 'd').format('YYYY-MM-DD')
+    to: getDayAfter()
 })
 
 const ResultsScreen = props => {
@@ -96,7 +54,16 @@ const ResultsScreen = props => {
 
     const handleSetDateFrom = date => {
         setDateFrom(date);
+        if (moment(date).isSameOrAfter(dateTo, 'day')) {
+            setDateTo(getDayAfter(date));
+        } else {
+            setHasFetched(false);
+        }
+    }
+
+    const handleSetDateTo = date => {
         setDateTo(date);
+        setHasFetched(false);
     }
 
     return (
@@ -104,7 +71,7 @@ const ResultsScreen = props => {
             <Card style={styles.searchFilterContainer}>
                 <View style={styles.dateFilterContainer}>
                     <Datepicker date={dateFrom} setDate={handleSetDateFrom} placeholder="From" />
-                    <Datepicker date={dateTo} setDate={setDateTo} placeholder="To" />
+                    <Datepicker date={dateTo} setDate={handleSetDateTo} placeholder="To" />
                 </View>
             </Card>
             <View style={styles.listContainer}>
@@ -117,10 +84,10 @@ const ResultsScreen = props => {
                             animationStyle={styles.lottie}
                             speed={1}
                         />
-                    : error ?
-                        <Image source={require("../assets/error-icon.png")} />
-                    : !properties.length ?
-                        <Image source={require("../assets/empty-loupe.svg")} />
+//                    : error ?
+//                        <Image source={require("../assets/error-icon.png")} />
+//                    : !properties.length ?
+//                        <Image source={require("../assets/empty-loupe.svg")} />
                     :
                         <FlatList
                             keyExtractor={item => item.id}
@@ -157,37 +124,6 @@ const styles = StyleSheet.create({
     list: {
         flexGrow: 1,
         justifyContent: 'flex-end'
-    },
-    listItem: {
-        borderColor: '#ddd',
-        borderWidth: 1,
-        borderRadius: 8,
-        marginVertical: 10,
-        backgroundColor: 'white',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        width: '100%'
-    },
-    availablePlacesCount: {
-        borderRadius: 3,
-        paddingLeft: 4,
-        paddingRight: 4,
-        backgroundColor: '#dfede7'
-    },
-    listItemDetails: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        width: '100%'
-    },
-    description: {
-        padding: 12
-    },
-    itemImage: {
-        width: '100%',
-        height: 150,
-        resizeMode: 'stretch',
-        borderRadius: 4
     },
     lottie: {
         width: 100,

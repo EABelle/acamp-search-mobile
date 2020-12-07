@@ -3,10 +3,10 @@ import DatePicker from "react-native-datepicker";
 import {Ionicons} from "@expo/vector-icons";
 import {StyleSheet, Text, View} from "react-native";
 
-export default function Datepicker({date, setDate}) {
+export default function Datepicker({date, setDate, placeholder}) {
     return (
         <View style={styles.datePickerContainer}>
-            <Text style={styles.placeHolder}>From</Text>
+            <Text style={styles.placeHolder}>{placeholder}</Text>
             <DatePicker
                 style={{width: 150}}
                 date={date}
@@ -19,14 +19,10 @@ export default function Datepicker({date, setDate}) {
                 customStyles={styles}
                 iconComponent={
                     (<Ionicons
-                        name={'ios-calendar'}
-                        size={23}
-                        color={'#ccc'}
-                        style={{
-                            marginLeft: 4,
-                            position: 'absolute',
-                            left: 120
-                        }}
+                        name="ios-calendar"
+                        size={24}
+                        color="#777"
+                        style={styles.icon}
                     />)
                 }
                 onDateChange={setDate}
@@ -40,6 +36,7 @@ const styles = StyleSheet.create({
         position: 'relative',
         marginLeft: 4,
         borderRadius: 4,
+        borderColor: '#777',
         justifyContent: 'flex-start',
         alignItems: 'center',
         flexDirection: 'row',
@@ -60,5 +57,10 @@ const styles = StyleSheet.create({
         left: 12,
         top: -8,
         fontSize: 12
+    },
+    icon: {
+        marginLeft: 4,
+        position: 'absolute',
+        left: 120
     }
 });
