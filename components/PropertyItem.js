@@ -1,14 +1,9 @@
-import {ImageBackground, StyleSheet, View} from "react-native";
+import {Image, StyleSheet, View} from "react-native";
 import TitleText from "./TitleText";
 import AvailablePlaces from "./AvailablePlaces";
 import React from "react";
 import PriceBox from "./PriceBox";
-
-const getCurrency = (currency) => {
-    if (currency === 'SEK') {
-        return 'kr';
-    } return currency;
-}
+import {formatCurrency} from "../utils";
 
 const PropertyItem = ({property}) => {
 
@@ -23,14 +18,14 @@ const PropertyItem = ({property}) => {
     } = property;
 
     return (
-        <View style={styles.listItem}>
-            <ImageBackground style={styles.itemImage} source={{uri: coverImage}} />
+        <View style={styles.container}>
+            <Image style={styles.itemImage} source={{uri: coverImage}} />
             <View style={styles.description}>
-                <TitleText>{title}</TitleText>
-                <View style={styles.listItemDetails}>
+                <TitleText style={styles.title}>{title}</TitleText>
+                <View style={styles.details}>
                     <AvailablePlaces number={availableVehicleSpots} type="Fordon"/>
                     <AvailablePlaces number={availableTentSpots} type="Tält"/>
-                    <PriceBox total={totalCost} costPerNight={averageCostPerNight} currency={getCurrency(currency)} />
+                    <PriceBox total={totalCost} costPerNight={averageCostPerNight} currency={formatCurrency(currency)} />
                 </View>
             </View>
         </View>
@@ -38,7 +33,7 @@ const PropertyItem = ({property}) => {
 };
 
 const styles = StyleSheet.create({
-    listItem: {
+    container: {
         borderColor: '#ddd',
         borderWidth: 1,
         borderRadius: 8,
@@ -49,7 +44,7 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         width: '100%'
     },
-    listItemDetails: {
+    details: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         width: '100%'
@@ -63,6 +58,9 @@ const styles = StyleSheet.create({
         resizeMode: 'stretch',
         borderRadius: 4
     },
+    title: {
+        marginBottom: 8
+    }
 });
 
 export default PropertyItem;
