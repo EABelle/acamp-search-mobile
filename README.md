@@ -8,6 +8,7 @@ To consider
 - Built with Expo
 - Empty state and error images are not following the standards of the company.
 - The app is not internationalized.
+- It was only tested on Android.
 
 ## Requeriments
 
